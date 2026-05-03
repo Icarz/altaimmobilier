@@ -28,3 +28,5 @@ Thumbs.db
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Credentials are stored in server/.env (gitignored)

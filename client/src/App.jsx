@@ -22,9 +22,9 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         {/* Public */}
-        <Route path="/"             element={<Home />} />
-        <Route path="/listings"     element={<Listings />} />
-        <Route path="/listings/:id" element={<ListingDetail />} />
+        <Route path="/"               element={<Home />} />
+        <Route path="/listings"       element={<Listings />} />
+        <Route path="/listings/:slug" element={<ListingDetail />} />
 
         {/* Admin — unprotected */}
         <Route path="/admin/login" element={<AdminLogin />} />

@@ -1,7 +1,11 @@
+import { useState, useEffect } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
-import PublicLayout  from '../layouts/PublicLayout'
-import PhotoGallery  from '../components/listings/PhotoGallery'
-import { getListingById, formatPrice, CATEGORY_LABELS, STATUS_LABELS, STATUS_COLORS } from '../data/mockData'
+import PublicLayout from '../layouts/PublicLayout'
+import PhotoGallery from '../components/listings/PhotoGallery'
+import { api }      from '../lib/api'
+import { formatPrice, CATEGORY_LABELS, STATUS_LABELS, STATUS_COLORS } from '../data/mockData'
+
+const WHATSAPP = import.meta.env.VITE_WHATSAPP_NUMBER || '212662018283'
 
 function Spec({ label, value }) {
   return (
@@ -13,13 +17,48 @@ function Spec({ label, value }) {
 }
 
 export default function ListingDetail() {
-  const { id }    = useParams()
-  const listing   = getListingById(id)
+  const { slug } = useParams()
+  const [listing, setListing] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
 
-  if (!listing) return <Navigate to="/listings" replace />
+  useEffect(() => {
+    setLoading(true)
+    api.getListing(slug)
+      .then(setListing)
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false))
+  }, [slug])
 
-  const isSale   = listing.listing_type === 'sale'
-  const isHidden = listing.status === 'sold_rented'
+  if (loading) {
+    return (
+      <PublicLayout>
+        <div className="pt-24 pb-20 max-w-7xl mx-auto px-6">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-clay-100 rounded w-1/3" />
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+              <div className="lg:col-span-3 aspect-[4/3] bg-clay-100 rounded-2xl" />
+              <div className="lg:col-span-2 space-y-4">
+                <div className="h-6 bg-clay-100 rounded w-3/4" />
+                <div className="h-10 bg-clay-100 rounded" />
+                <div className="h-32 bg-clay-100 rounded-2xl" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </PublicLayout>
+    )
+  }
+
+  if (notFound || !listing) return <Navigate to="/listings" replace />
+
+  const isSale      = listing.listing_type === 'sale'
+  const isSoldRented = listing.status === 'sold_rented'
+
+  const waMessage = encodeURIComponent(
+    `Bonjour, je suis intéressé(e) par le bien "${listing.title}" (${listing.location}). Pouvez-vous me donner plus d'informations ?`
+  )
+  const whatsappUrl = `https://wa.me/${WHATSAPP}?text=${waMessage}`
 
   return (
     <PublicLayout>
@@ -32,10 +71,7 @@ export default function ListingDetail() {
             <span>/</span>
             <Link to="/listings" className="hover:text-terra transition-colors">Annonces</Link>
             <span>/</span>
-            <Link
-              to={`/listings?category=${listing.category}`}
-              className="hover:text-terra transition-colors"
-            >
+            <Link to={`/listings?category=${listing.category}`} className="hover:text-terra transition-colors">
               {CATEGORY_LABELS[listing.category]}s
             </Link>
             <span>/</span>
@@ -45,12 +81,12 @@ export default function ListingDetail() {
           {/* Main grid */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-14">
 
-            {/* Left — gallery (3/5) */}
+            {/* Left — gallery */}
             <div className="lg:col-span-3">
               <PhotoGallery photos={listing.photos} />
             </div>
 
-            {/* Right — details (2/5) */}
+            {/* Right — details */}
             <div className="lg:col-span-2">
               {/* Badges */}
               <div className="flex flex-wrap gap-2 mb-5">
@@ -85,36 +121,37 @@ export default function ListingDetail() {
                 <p className="font-sans text-xs text-clay-400 tracking-widest uppercase mb-1">
                   {isSale ? 'Prix de vente' : 'Loyer mensuel'}
                 </p>
-                <p className="font-display text-4xl text-gold font-medium">
-                  {formatPrice(listing.price, listing.listing_type)}
+                <p className="font-display text-3xl text-gold font-medium leading-snug">
+                  {formatPrice(listing.price_mad, listing.price_eur, listing.listing_type)}
                 </p>
               </div>
 
               {/* Specs */}
               <div className="mb-8">
-                <Spec label="Surface"          value={`${listing.surface_area} m²`} />
-                <Spec label="Pièces"           value={listing.rooms} />
-                <Spec label="Salles de bain"   value={listing.bathrooms} />
-                {listing.floor != null && (
-                  <Spec label="Étage"          value={listing.floor} />
-                )}
-                <Spec label="Type"             value={CATEGORY_LABELS[listing.category]} />
-                <Spec label="Transaction"      value={isSale ? 'Vente' : 'Location'} />
+                <Spec label="Surface"        value={`${listing.surface_area} m²`} />
+                <Spec label="Pièces"         value={listing.rooms} />
+                <Spec label="Salles de bain" value={listing.bathrooms} />
+                {listing.floor != null && <Spec label="Étage" value={listing.floor} />}
+                <Spec label="Type"           value={CATEGORY_LABELS[listing.category]} />
+                <Spec label="Transaction"    value={isSale ? 'Vente' : 'Location'} />
               </div>
 
-              {/* Contact CTA */}
-              {!isHidden && (
+              {/* WhatsApp CTA — hidden when sold/rented */}
+              {!isSoldRented && (
                 <a
-                  href="tel:+212522000000"
-                  className="w-full flex items-center justify-center gap-3 py-4 bg-terra text-white
-                             font-sans rounded-2xl hover:bg-terra-600 transition-colors duration-300 mb-3"
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-3 py-4 bg-[#25D366] text-white
+                             font-sans rounded-2xl hover:bg-[#1ebe57] transition-colors duration-300 mb-3"
                 >
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                   </svg>
-                  Nous appeler
+                  Contacter sur WhatsApp
                 </a>
               )}
+
               <Link
                 to="/listings"
                 className="w-full flex items-center justify-center gap-2 py-3 border border-clay-200

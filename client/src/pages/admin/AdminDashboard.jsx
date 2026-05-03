@@ -1,18 +1,29 @@
-import AdminLayout from '../../layouts/AdminLayout'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { listings, formatPrice, CATEGORY_LABELS, STATUS_LABELS, STATUS_COLORS, getCoverPhoto } from '../../data/mockData'
+import AdminLayout from '../../layouts/AdminLayout'
+import { api } from '../../lib/api'
+import { formatPrice, CATEGORY_LABELS, STATUS_LABELS, STATUS_COLORS, getCoverPhoto } from '../../data/mockData'
 
-function StatCard({ label, value, sub, color }) {
+function StatCard({ label, value, color }) {
   return (
-    <div className={`bg-white rounded-2xl border border-clay-100 p-6`}>
+    <div className="bg-white rounded-2xl border border-clay-100 p-6">
       <p className="font-sans text-xs tracking-widest uppercase text-clay-400 mb-3">{label}</p>
       <p className={`font-display text-5xl font-light ${color ?? 'text-clay-900'}`}>{value}</p>
-      {sub && <p className="font-sans text-xs text-clay-400 mt-2">{sub}</p>}
     </div>
   )
 }
 
 export default function AdminDashboard() {
+  const [listings, setListings] = useState([])
+  const [loading,  setLoading]  = useState(true)
+
+  useEffect(() => {
+    api.adminGetListings()
+      .then(setListings)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
   const total     = listings.length
   const forSale   = listings.filter(l => l.listing_type === 'sale').length
   const forRent   = listings.filter(l => l.listing_type === 'rent').length
@@ -24,8 +35,21 @@ export default function AdminDashboard() {
   }))
 
   const recent = [...listings]
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 5)
+
+  if (loading) {
+    return (
+      <AdminLayout title="Tableau de bord">
+        <div className="animate-pulse space-y-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1,2,3,4].map(i => <div key={i} className="h-32 bg-clay-100 rounded-2xl" />)}
+          </div>
+          <div className="h-64 bg-clay-100 rounded-2xl" />
+        </div>
+      </AdminLayout>
+    )
+  }
 
   return (
     <AdminLayout title="Tableau de bord">
@@ -52,10 +76,7 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-2xl border border-clay-100 overflow-hidden">
         <div className="flex items-center justify-between px-6 py-5 border-b border-clay-100">
           <h2 className="font-display text-2xl text-clay-900 font-light">Annonces récentes</h2>
-          <Link
-            to="/admin/listings"
-            className="font-sans text-sm text-terra hover:text-terra-600 transition-colors"
-          >
+          <Link to="/admin/listings" className="font-sans text-sm text-terra hover:text-terra-600 transition-colors">
             Voir tout →
           </Link>
         </div>
@@ -72,7 +93,7 @@ export default function AdminDashboard() {
           </thead>
           <tbody className="divide-y divide-clay-50">
             {recent.map(l => (
-              <tr key={l.id} className="table-row-hover">
+              <tr key={l._id} className="table-row-hover">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-9 rounded-lg overflow-hidden shrink-0 bg-clay-100">
@@ -85,7 +106,9 @@ export default function AdminDashboard() {
                   </div>
                 </td>
                 <td className="px-4 py-4 hidden md:table-cell">
-                  <span className="font-display text-base text-gold">{formatPrice(l.price, l.listing_type)}</span>
+                  <span className="font-display text-base text-gold">
+                    {formatPrice(l.price_mad, l.price_eur, l.listing_type)}
+                  </span>
                 </td>
                 <td className="px-4 py-4 hidden lg:table-cell">
                   <span className={`font-sans text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_COLORS[l.status]}`}>
@@ -94,12 +117,12 @@ export default function AdminDashboard() {
                 </td>
                 <td className="px-4 py-4 hidden md:table-cell">
                   <span className="font-sans text-xs text-clay-400">
-                    {new Date(l.created_at).toLocaleDateString('fr-FR')}
+                    {new Date(l.createdAt).toLocaleDateString('fr-FR')}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <Link
-                    to={`/admin/listings/${l.id}/edit`}
+                    to={`/admin/listings/${l._id}/edit`}
                     className="font-sans text-xs px-3 py-1.5 rounded-lg border border-clay-200
                                text-clay-600 hover:border-terra hover:text-terra transition-colors"
                   >
@@ -112,7 +135,7 @@ export default function AdminDashboard() {
         </table>
       </div>
 
-      {/* Quick actions */}
+      {/* Quick action */}
       <div className="mt-6">
         <Link
           to="/admin/listings/new"

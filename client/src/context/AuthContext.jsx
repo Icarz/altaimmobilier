@@ -1,30 +1,37 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
+import { api } from '../lib/api'
 
 const AuthContext = createContext(null)
 
-// Mock credentials — in production these come from the server
-const MOCK_EMAIL    = 'admin@altaimmobilier.com'
-const MOCK_PASSWORD = 'admin123'
-
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem('alta_admin_token'))
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [checking, setChecking] = useState(true)
 
-  const isAuthenticated = Boolean(token)
+  // Verify session on mount
+  useEffect(() => {
+    api.me()
+      .then(data => setIsAuthenticated(data.authenticated === true))
+      .catch(() => setIsAuthenticated(false))
+      .finally(() => setChecking(false))
+  }, [])
 
-  function login(email, password) {
-    if (email === MOCK_EMAIL && password === MOCK_PASSWORD) {
-      const mockToken = 'mock-jwt-' + Date.now()
-      localStorage.setItem('alta_admin_token', mockToken)
-      setToken(mockToken)
+  async function login(email, password) {
+    try {
+      await api.login(email, password)
+      setIsAuthenticated(true)
       return { ok: true }
+    } catch (err) {
+      return { ok: false, error: err.message || 'Email ou mot de passe incorrect.' }
     }
-    return { ok: false, error: 'Email ou mot de passe incorrect.' }
   }
 
-  function logout() {
-    localStorage.removeItem('alta_admin_token')
-    setToken(null)
+  async function logout() {
+    await api.logout().catch(() => {})
+    setIsAuthenticated(false)
   }
+
+  // Don't render until session check is done (prevents redirect flicker)
+  if (checking) return null
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>

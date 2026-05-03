@@ -26,7 +26,7 @@ export default function ListingsTable({ listings, onDelete }) {
         </thead>
         <tbody className="divide-y divide-clay-50">
           {listings.map(listing => (
-            <tr key={listing.id} className="table-row-hover transition-colors">
+            <tr key={listing._id} className="table-row-hover transition-colors">
               {/* Title + thumbnail */}
               <td className="px-6 py-4">
                 <div className="flex items-center gap-4">
@@ -65,7 +65,7 @@ export default function ListingsTable({ listings, onDelete }) {
               {/* Price */}
               <td className="px-4 py-4">
                 <span className="font-display text-base text-gold">
-                  {formatPrice(listing.price, listing.listing_type)}
+                  {formatPrice(listing.price_mad, listing.price_eur, listing.listing_type)}
                 </span>
               </td>
 
@@ -80,13 +80,13 @@ export default function ListingsTable({ listings, onDelete }) {
               <td className="px-6 py-4 text-right">
                 <div className="flex items-center justify-end gap-2">
                   <Link
-                    to={`/admin/listings/${listing.id}/edit`}
+                    to={`/admin/listings/${listing._id}/edit`}
                     className="font-sans text-xs px-3 py-1.5 rounded-lg border border-clay-200 text-clay-700 hover:border-terra hover:text-terra transition-colors"
                   >
                     Modifier
                   </Link>
                   <button
-                    onClick={() => onDelete(listing.id)}
+                    onClick={() => onDelete(listing._id)}
                     className="font-sans text-xs px-3 py-1.5 rounded-lg border border-clay-200 text-clay-500 hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors"
                   >
                     Supprimer

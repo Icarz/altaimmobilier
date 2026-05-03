@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import AdminLayout   from '../../layouts/AdminLayout'
 import ListingsTable from '../../components/admin/ListingsTable'
-import { listings as initialListings, CATEGORY_LABELS } from '../../data/mockData'
+import { api }       from '../../lib/api'
 
 const CATEGORY_OPTS = [
   { value: '',          label: 'Toutes catégories' },
@@ -18,34 +18,47 @@ const TYPE_OPTS = [
 const STATUS_OPTS = [
   { value: '',           label: 'Tous statuts' },
   { value: 'available',  label: 'Disponible' },
-  { value: 'under_offer','label': 'Offre en cours' },
-  { value: 'sold_rented','label': 'Vendu / Loué' },
+  { value: 'sold_rented', label: 'Vendu / Loué' },
 ]
 
 export default function AdminListings() {
-  const [data,     setData]     = useState(initialListings)
+  const [listings, setListings] = useState([])
+  const [loading,  setLoading]  = useState(true)
   const [category, setCategory] = useState('')
   const [type,     setType]     = useState('')
   const [status,   setStatus]   = useState('')
   const [search,   setSearch]   = useState('')
-  const [toDelete, setToDelete] = useState(null)   // id pending confirmation
+  const [toDelete, setToDelete] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
-  const filtered = data.filter(l => {
-    if (category && l.category      !== category) return false
-    if (type     && l.listing_type  !== type)     return false
-    if (status   && l.status        !== status)   return false
+  useEffect(() => {
+    api.adminGetListings()
+      .then(setListings)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const filtered = listings.filter(l => {
+    if (category && l.category     !== category) return false
+    if (type     && l.listing_type !== type)     return false
+    if (status   && l.status       !== status)   return false
     if (search   && !l.title.toLowerCase().includes(search.toLowerCase()) &&
                     !l.location.toLowerCase().includes(search.toLowerCase())) return false
     return true
   })
 
-  function confirmDelete(id) {
-    setToDelete(id)
-  }
-
-  function executeDelete() {
-    setData(d => d.filter(l => l.id !== toDelete))
-    setToDelete(null)
+  async function executeDelete() {
+    if (!toDelete) return
+    setDeleting(true)
+    try {
+      await api.adminDeleteListing(toDelete)
+      setListings(d => d.filter(l => l._id !== toDelete))
+      setToDelete(null)
+    } catch (err) {
+      alert('Erreur lors de la suppression : ' + err.message)
+    } finally {
+      setDeleting(false)
+    }
   }
 
   return (
@@ -53,7 +66,6 @@ export default function AdminListings() {
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        {/* Search */}
         <div className="relative flex-1 max-w-xs">
           <svg viewBox="0 0 20 20" fill="currentColor"
                className="w-4 h-4 text-clay-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -69,26 +81,18 @@ export default function AdminListings() {
           />
         </div>
 
-        {/* Filters */}
         {[
           { value: category, setter: setCategory, opts: CATEGORY_OPTS },
           { value: type,     setter: setType,     opts: TYPE_OPTS     },
           { value: status,   setter: setStatus,   opts: STATUS_OPTS   },
         ].map((f, i) => (
-          <select
-            key={i}
-            value={f.value}
-            onChange={e => f.setter(e.target.value)}
+          <select key={i} value={f.value} onChange={e => f.setter(e.target.value)}
             className="bg-white border border-clay-200 text-clay-700 font-sans text-sm
-                       rounded-xl px-3 py-2 outline-none focus:border-terra transition-colors"
-          >
-            {f.opts.map(o => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
+                       rounded-xl px-3 py-2 outline-none focus:border-terra transition-colors">
+            {f.opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         ))}
 
-        {/* Add button */}
         <Link
           to="/admin/listings/new"
           className="ml-auto inline-flex items-center gap-2 px-5 py-2 bg-terra text-white
@@ -101,15 +105,19 @@ export default function AdminListings() {
         </Link>
       </div>
 
-      {/* Count */}
       <p className="font-sans text-sm text-clay-400 mb-4">
-        {filtered.length} annonce{filtered.length !== 1 ? 's' : ''}
+        {loading ? 'Chargement…' : `${filtered.length} annonce${filtered.length !== 1 ? 's' : ''}`}
       </p>
 
-      {/* Table */}
-      <ListingsTable listings={filtered} onDelete={confirmDelete} />
+      {loading ? (
+        <div className="space-y-3">
+          {[1,2,3,4].map(i => <div key={i} className="h-16 bg-clay-100 rounded-xl animate-pulse" />)}
+        </div>
+      ) : (
+        <ListingsTable listings={filtered} onDelete={id => setToDelete(id)} />
+      )}
 
-      {/* Delete modal */}
+      {/* Delete confirmation modal */}
       {toDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-clay-900/60 backdrop-blur-sm px-4">
           <div className="bg-white rounded-2xl shadow-warm p-8 max-w-sm w-full animate-fade-in-up">
@@ -120,17 +128,19 @@ export default function AdminListings() {
             <div className="flex gap-3">
               <button
                 onClick={() => setToDelete(null)}
+                disabled={deleting}
                 className="flex-1 py-2.5 border border-clay-200 text-clay-700 font-sans text-sm
-                           rounded-xl hover:border-clay-400 transition-colors"
+                           rounded-xl hover:border-clay-400 transition-colors disabled:opacity-50"
               >
                 Annuler
               </button>
               <button
                 onClick={executeDelete}
+                disabled={deleting}
                 className="flex-1 py-2.5 bg-red-600 text-white font-sans text-sm
-                           rounded-xl hover:bg-red-700 transition-colors"
+                           rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50"
               >
-                Supprimer
+                {deleting ? 'Suppression…' : 'Supprimer'}
               </button>
             </div>
           </div>
