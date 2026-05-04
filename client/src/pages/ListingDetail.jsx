@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import PublicLayout from '../layouts/PublicLayout'
 import PhotoGallery from '../components/listings/PhotoGallery'
+import ListingMap   from '../components/listings/ListingMap'
 import { api }      from '../lib/api'
 import { formatPrice, CATEGORY_LABELS, STATUS_LABELS, STATUS_COLORS } from '../data/mockData'
 
@@ -169,6 +170,13 @@ export default function ListingDetail() {
             <p className="font-sans text-clay-700 leading-relaxed text-base">
               {listing.description}
             </p>
+          </div>
+
+          {/* Map */}
+          <div className="mt-14">
+            <h2 className="font-display text-3xl text-clay-900 font-light mb-5">Localisation</h2>
+            <div className="w-10 h-px bg-terra mb-6" />
+            <ListingMap location={listing.location} />
           </div>
 
         </div>

@@ -102,4 +102,28 @@ const deletePhoto = async (req, res, next) => {
   }
 };
 
-module.exports = { uploadPhotos, updatePhoto, deletePhoto };
+// PUT /api/admin/listings/:id/photos/reorder
+// Body: { order: ['photoId1', 'photoId2', ...] }
+const reorderPhotos = async (req, res, next) => {
+  try {
+    const { order } = req.body;
+    if (!Array.isArray(order) || order.length === 0) {
+      return res.status(400).json({ message: 'order must be a non-empty array of photo IDs' });
+    }
+
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) return res.status(404).json({ message: 'Listing not found' });
+
+    order.forEach((photoId, index) => {
+      const photo = listing.photos.id(photoId);
+      if (photo) photo.display_order = index;
+    });
+
+    await listing.save();
+    res.json({ photos: listing.photos });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { uploadPhotos, updatePhoto, deletePhoto, reorderPhotos };

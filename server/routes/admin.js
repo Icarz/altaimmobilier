@@ -12,6 +12,7 @@ const {
   uploadPhotos,
   deletePhoto,
   updatePhoto,
+  reorderPhotos,
 } = require('../controllers/photosController');
 
 const upload = multer({
@@ -39,6 +40,7 @@ router.delete('/listings/:id', deleteListing);
 
 // Photo management
 router.post('/listings/:id/photos', upload.array('photos', 15), uploadPhotos);
+router.put('/listings/:id/photos/reorder', reorderPhotos);
 router.patch('/listings/:id/photos/:photoId', updatePhoto);
 router.delete('/listings/:id/photos/:photoId', deletePhoto);
 

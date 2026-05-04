@@ -117,11 +117,6 @@ export default function AdminLogin() {
               />
             </div>
 
-            {/* Hint */}
-            <p className="font-sans text-xs text-clay-600">
-              Démo : admin@altaimmobilier.com / admin123
-            </p>
-
             {/* Submit */}
             <button
               type="submit"

@@ -60,18 +60,6 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-4">
-          <Link
-            to="/admin"
-            className={`hidden md:inline-flex items-center gap-1.5 font-sans text-xs tracking-widest uppercase
-              px-4 py-2 rounded-full border transition-all duration-300 ${
-              transparent
-                ? 'border-white/40 text-white/80 hover:bg-white/10'
-                : 'border-clay-200 text-clay-500 hover:border-terra hover:text-terra'
-            }`}
-          >
-            Admin
-          </Link>
-
           {/* Mobile menu toggle */}
           <button
             onClick={() => setMenuOpen(o => !o)}
@@ -100,13 +88,6 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link
-            to="/admin"
-            onClick={() => setMenuOpen(false)}
-            className="font-sans text-xs tracking-widest uppercase text-clay-400 hover:text-terra transition-colors mt-2"
-          >
-            Espace Admin
-          </Link>
         </div>
       )}
     </nav>

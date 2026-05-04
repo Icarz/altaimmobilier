@@ -100,18 +100,27 @@ export default function EditListing() {
     }
   }
 
-  // Drag-to-reorder (local only — persisted on save via display_order)
+  // Drag-to-reorder — persisted immediately via PUT /photos/reorder
   function onDragStart(photoId) { setDragging(photoId) }
-  function onDrop(targetId) {
+  async function onDrop(targetId) {
     if (!dragging || dragging === targetId) { setDragging(null); return }
-    setPhotos(p => {
-      const from = p.findIndex(ph => ph._id === dragging)
-      const to   = p.findIndex(ph => ph._id === targetId)
-      const next = [...p]
-      ;[next[from], next[to]] = [next[to], next[from]]
-      return next.map((ph, i) => ({ ...ph, display_order: i }))
-    })
+
+    const next = [...photos]
+    const from = next.findIndex(ph => ph._id === dragging)
+    const to   = next.findIndex(ph => ph._id === targetId)
+    ;[next[from], next[to]] = [next[to], next[from]]
+    const ordered = next.map((ph, i) => ({ ...ph, display_order: i }))
+
+    setPhotos(ordered)
     setDragging(null)
+
+    try {
+      await api.reorderPhotos(id, ordered.map(ph => ph._id))
+    } catch {
+      // revert to server state on failure
+      const res = await api.adminGetListing(id)
+      setPhotos(res.photos.map(p => ({ ...p, isNew: false, preview: p.url })))
+    }
   }
 
   // ── Form submit ─────────────────────────────────────────────────────

@@ -67,4 +67,9 @@ export const api = {
     request(`/admin/listings/${listingId}/photos/${photoId}`, {
       method: 'DELETE',
     }),
+  reorderPhotos: (listingId, order) =>
+    request(`/admin/listings/${listingId}/photos/reorder`, {
+      method: 'PUT',
+      body: { order },
+    }),
 }

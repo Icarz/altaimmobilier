@@ -4,46 +4,51 @@ export default {
   theme: {
     extend: {
       colors: {
-        ivory: '#FAF8F5',
+        // ── Palette extracted from brand swatch ──────────────────────────
+        // Steel blue-gray: #A5B4BB  |  Warm taupe:  #876B62
+        // Dark espresso:   #5A2A15  |  Cream beige: #E0D2C3
+        // Gold/mustard:    #B89430  |  Terracotta:  #B5522A
+        // ─────────────────────────────────────────────────────────────────
+        ivory: '#FAF6F0',
         clay: {
-          50:  '#F4F0EC',
-          100: '#E8E2DC',
-          200: '#D4CCC4',
-          300: '#BDB5AD',
-          400: '#A09890',
-          500: '#8C8480',
-          600: '#736B64',
-          700: '#5C5450',
-          800: '#3D3735',
-          900: '#1A1714',
+          50:  '#F5EDE4',
+          100: '#E8DDD1',
+          200: '#D5C8B9',
+          300: '#BBA89A',
+          400: '#9D8B7C',
+          500: '#876B62',  // palette warm taupe
+          600: '#6C5248',
+          700: '#533D34',
+          800: '#5A2A15',  // palette dark espresso
+          900: '#2A1208',  // near-black warm brown
         },
         terra: {
-          50:  '#FBF0EB',
-          100: '#F0D9CC',
-          200: '#DFB09A',
-          300: '#CE8767',
-          400: '#BE6135',
-          DEFAULT: '#C4622D',
-          600: '#A04D22',
-          700: '#7D3A18',
+          50:  '#F8EDE8',
+          100: '#EDCEBB',
+          200: '#DAA588',
+          300: '#C87E58',
+          400: '#BE6338',
+          DEFAULT: '#B5522A',  // palette terracotta
+          600: '#923F1E',
+          700: '#722F14',
         },
         gold: {
-          50:  '#F9F4E8',
-          100: '#EDE4C3',
-          300: '#C5AC50',
-          DEFAULT: '#B8963E',
-          500: '#9A7D33',
+          50:  '#F5EDD0',
+          100: '#E6D490',
+          300: '#C8A838',
+          DEFAULT: '#B89430',  // palette gold/mustard
+          500: '#967820',
         },
-        azure: '#2B5F8E',
+        azure: '#A5B4BB',  // palette steel blue-gray
       },
       fontFamily: {
         display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
         sans: ['Outfit', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        card: '0 2px 20px rgba(26,23,20,0.08)',
-        'card-hover': '0 8px 40px rgba(26,23,20,0.16)',
-        warm: '0 10px 50px rgba(26,23,20,0.12)',
+        card: '0 2px 20px rgba(42,18,8,0.08)',
+        'card-hover': '0 8px 40px rgba(42,18,8,0.16)',
+        warm: '0 10px 50px rgba(42,18,8,0.12)',
       },
       transitionTimingFunction: {
         'out-expo': 'cubic-bezier(0.19,1,0.22,1)',
