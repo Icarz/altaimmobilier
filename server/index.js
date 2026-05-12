@@ -7,6 +7,8 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 connectDB();
 
 app.use(cors({
@@ -15,6 +17,8 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+
+app.get('/', (req, res) => res.json({ status: 'ok', service: 'Alta Immobilier API' }));
 
 app.use('/api/listings', require('./routes/listings'));
 app.use('/api/auth', require('./routes/auth'));

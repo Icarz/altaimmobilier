@@ -26,7 +26,10 @@ server/.env
 .DS_Store
 Thumbs.db
 
-# Claude Code local settings
-.claude/settings.local.json
+# Claude Code
+.claude/
+CLAUDE.md
+.claude-mem/
+.mcp.json
 
 # Credentials are stored in server/.env (gitignored)
